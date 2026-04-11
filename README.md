@@ -1,64 +1,153 @@
-# CLI-buddies
-Your terminal doesn't have to be lonely. CLI Buddies are pixel art companions that live in a tmux pane while you code, wandering around, knocking things over, reminding you to hydrate, and generally being little gremlins about it. Cats first. More creatures coming. Pure Python stdlib, one file per buddy, zero dependencies.
+# CLI Buddies
 
+Your terminal doesn't have to be lonely. CLI Buddies are pixel art companions that live in your terminal while you code -- wandering around, knocking things over, reminding you to hydrate, and generally being little gremlins about it. Cats first. More creatures coming.
+
+Pure Python. One file per buddy. Zero dependencies. No pip installs.
 
 ---
 
-## Getting started
+## Quick Start (5 minutes)
 
-You don't need to be a programmer to run these. You just need Python, which is already installed on most computers.
+### Step 1: Check if you have Python
 
-**Check if you have Python:**
+Open your terminal and type:
+
 ```bash
 python3 --version
 ```
-If you see a version number (3.8 or higher), you're good. If not, download it from [python.org](https://python.org).
 
-**Download a buddy:**
+If you see a version number (3.8 or higher), you're good. If not, download Python from [python.org](https://python.org/downloads).
 
-Click on the file you want in this repo, then click the **Download raw file** button (top right of the file view). Save it somewhere you'll remember, like your home folder or a `~/buddies/` folder you make.
+### Step 2: Download this repo
 
-Or if you're comfortable with the terminal:
 ```bash
-curl -O https://raw.githubusercontent.com/YOUR_USERNAME/cli-buddies/main/cozy-cats/cat_buddy.py
+git clone https://github.com/vsruthi00/CLI-buddies.git
+cd CLI-buddies
 ```
 
----
+Or click the green **Code** button on this page and choose **Download ZIP**, then unzip it.
 
-## Running a buddy
+### Step 3: Run cozy-cats
 
-Open your terminal and navigate to where you saved the file:
 ```bash
-cd ~/wherever-you-saved-it
-python3 cat_buddy.py
+python3 cozy-cats/cozy-cats.py --height 32
 ```
 
-That's it. A little room will appear with furniture and a summoning bell. Click the bell to bring in your first cat.
+A little room will appear with furniture, cats, and a bell. Click the bell to summon your first cat.
 
 **To quit:** press `Ctrl+C`
 
+That's it. You're done. Everything below is optional but recommended.
+
 ---
 
-## Running alongside your code (recommended)
+## Running Alongside Your Code (the good part)
 
-The real magic is having a buddy open in a split pane while you work. If you use tmux, this one command opens a pane at the bottom of your terminal and launches the buddy inside it:
+The real magic is having cats in a pane at the bottom of your terminal while you work in the top. For this you need **tmux**.
 
-```bash
-tmux split-window -v -l 22 'python3 ~/path/to/cat_buddy.py'
+### What is tmux?
+
+tmux is a terminal multiplexer. It lets you split one terminal window into multiple panes. Think of it like having two terminals stacked on top of each other in the same window. You code in the top pane, cats live in the bottom pane.
+
+```
++----------------------------------+
+|  your code / terminal            |
+|  (you work here normally)        |
+|                                  |
++----------------------------------+
+|  cozy-cats pane                  |
+|  (cats wander around here)       |
++----------------------------------+
 ```
 
-If you don't use tmux, you can just open a second terminal window side by side and run it there.
+You click on whichever pane you want to use. Click the top pane to type commands. Click the bottom pane to interact with your cats.
+
+### Install tmux
+
+**macOS (using Homebrew):**
+```bash
+brew install tmux
+```
+
+If you don't have Homebrew, install it first:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+Then run `brew install tmux`.
+
+**Ubuntu / Debian:**
+```bash
+sudo apt update && sudo apt install tmux
+```
+
+**Fedora:**
+```bash
+sudo dnf install tmux
+```
+
+**Windows (WSL):**
+```bash
+sudo apt install tmux
+```
+
+**Verify it installed:**
+```bash
+tmux -V
+```
+
+You should see something like `tmux 3.4`.
+
+### Launch cozy-cats with the launcher script
+
+Once tmux is installed, use the included launcher:
+
+```bash
+bash cozy-cats/launch.sh
+```
+
+This does everything for you:
+- Starts a tmux session (or uses your existing one)
+- Creates a 32-row pane at the bottom
+- Launches cozy-cats inside it
+- Enables mouse mode so you can click between panes
+
+You'll see your normal terminal on top and the cat room on the bottom. Click the bottom pane to interact with cats, click the top pane to go back to coding.
+
+**Custom height:**
+```bash
+bash cozy-cats/launch.sh 24    # shorter pane
+bash cozy-cats/launch.sh 36    # taller pane
+```
+
+### Launch manually (if you prefer)
+
+If you're already inside tmux:
+```bash
+tmux split-window -v -l 32 'python3 /full/path/to/CLI-buddies/cozy-cats/cozy-cats.py --height 32'
+```
+
+Or just open a second terminal window and run:
+```bash
+python3 cozy-cats/cozy-cats.py
+```
+
+### Closing
+
+- **Quit the cats:** press `Ctrl+C` in the cat pane
+- **Close the tmux pane:** type `exit` in the pane after the cats quit
+- **Kill the whole tmux session:** `tmux kill-session -t cozy-cats`
+- **Detach from tmux (leave it running in background):** press `Ctrl+B` then `D`
 
 ---
 
 ## Requirements
 
-- Python 3.8 or higher
-- A modern terminal emulator with true-color support (iTerm2, Kitty, Alacritty, Wezterm, or a recent version of GNOME Terminal all work great)
-- Mouse clicks enabled in your terminal (most are by default)
-- tmux if you want the split-pane setup (optional but recommended)
+- **Python 3.8+** (already on most Macs and Linux machines)
+- **A modern terminal** with true-color support: iTerm2, Kitty, Alacritty, WezTerm, Terminal.app (macOS), or a recent GNOME Terminal all work
+- **Mouse support** enabled in your terminal (most are by default)
+- **tmux** for the split-pane setup (optional but recommended)
 
-No pip installs. No package.json. Nothing to configure. Just one file.
+No pip installs. No virtual environments. No package managers. Just Python and a terminal.
 
 ---
 
@@ -66,51 +155,97 @@ No pip installs. No package.json. Nothing to configure. Just one file.
 
 # Cozy Cats
 
-A colony of eight pixel art cats that wander around a little room while you work. They have distinct personalities, opinions about food, and a lot to say about your hydration habits.
+A colony of eight pixel art cats that wander around a cozy room while you work. They have distinct personalities, opinions about food, and a lot to say about your hydration habits.
 
----
+## The Cats
 
-## The cats
+You start with an empty room. Click the bell icon (top right) to summon a cat. Pick which one you want, give it a name (or keep the default), and watch it wander in. Up to four cats on screen at once.
 
-You start with an empty room. Click the 🔔 bell to summon a cat, pick which one you want, give it a name (or keep the default), and watch it wander in. You can have up to four cats on screen at once.
+| Name | Personality | Food preference |
+|------|-------------|-----------------|
+| Seraphine | High-maintenance princess. Tolerates almost nothing. | Fish only |
+| Hazel | Sweet and shy. May flee if overwhelmed. | Wet food |
+| Kulfi | Chaos goblin. Knocks things over on purpose. | Anything |
+| Nyx | Void cat. Disappears into shadow, leaving only glowing eyes. | Wet food |
+| Arwen | Aloof and dry. Gives attention on her own terms. | Dry food |
+| Saffron | Gentle chirper. Trills at you unprompted. | Wet food |
+| Mochi | Extremely needy. Begs constantly. Sits on your keyboard. | Wet food |
+| Oreo | Chaos goblin #2. Always hungry, always begging, occasionally destructive. | Anything |
 
-| | Name | Personality | Food preference |
-|--|------|-------------|-----------------|
-| 🤍 | Séraphine | High-maintenance princess. Tolerates almost nothing. | Fish only |
-| 🟤 | Hazel | Sweet and shy. May flee if she gets overwhelmed. | Wet food |
-| 🟠 | Kulfi | Chaos goblin. Knocks things over on purpose. | Anything |
-| 🖤 | Nyx | Void cat. Randomly disappears into shadow, leaving only her eyes. | Wet food |
-| 🩶 | Arwen | Aloof and sassy. Gives attention strictly on her own terms. | Dry food |
-| 🌈 | Saffron | Gentle chirper. Will trill at you unprompted. | Wet food |
-| 👑 | Mochi | Extremely needy. The most frequent reminders. Begs constantly. | Wet food |
-| 🐄 | Oreo | Chaos goblin #2. Always hungry, always begging, occasionally destructive. | Anything |
+## Controls
 
----
+- **Click the bell** (top right) to summon a cat
+- **Click the save icon** (top right) to save your current cats so they reappear next time
+- **Click the trash icon** (top right) to send a cat away
+- **Click any cat** to open the interaction menu (feed, pet, play, cuddle)
+- **Click a knocked-over plant** to fix it (Kulfi and Oreo knock them over)
+- **Ctrl+C** to quit
+
+## Reminders
+
+Your cats remind you to take care of yourself:
+
+| Reminder | Frequency | When |
+|----------|-----------|------|
+| Drink water | Every 20 minutes | Always |
+| Stretch / take a break | Every 60 minutes | Always |
+| Eat a meal | At mealtimes | 7-8am, 12-1pm, 6-7pm |
+| Have a snack | Afternoon | 3-5pm |
+| Motivational messages | Varies by cat | Throughout the day |
+
+Each cat delivers reminders in their own voice. Mochi will be genuinely worried about your hydration. Seraphine will make it sound like your problem. Kulfi will just shout.
 
 ## Features
 
-**Reminders that float above whoever's talking**
-Each cat gives you timed reminders to drink water, take a stretch break, and keep going. They all have their own voice — Mochi will be genuinely worried about your hydration, Séraphine will make it sound like your problem, and Kulfi will just shout at you.
+- **Pixel art room** with desk, chair, cat tower, cat bed, shelf, window, and plants
+- **Cat AI** -- cats wander, sit, loaf, sleep, claim furniture spots, and do cat things on their own
+- **Personality-driven interactions** -- each cat reacts differently to food, pets, and cuddles
+- **Kulfi and Oreo knock over plants** -- click to fix them
+- **Nyx disappears** into shadow and reappears when she feels like it
+- **Hazel may flee** if you pet her too much -- she'll come back if you summon her again
+- **Mochi sits on your keyboard** (a dedicated animation spot just for her)
+- **Heart popup** appears when you pet or cuddle a cat
+- **Colony saves** -- click save to preserve your cats between sessions
+- **Config file** at `~/.config/cozy-cats/config.json` for customizing reminder intervals, messages, and scene layout
 
-**Click to interact**
-Click any cat to open a retro pixel-style menu. You can give them dry food, wet food, or fish, play with yarn or a feather toy, pet them, or cuddle. Each cat reacts differently based on their personality and food preferences. Séraphine will not eat dry food. Don't try.
+## CLI Flags
 
-**Cats do things on their own**
-They wander, sit, loaf around, and fall asleep without any input from you. Kulfi and Oreo will knock over the orchid or fern when they feel like it (click the plant to fix it). Nyx will randomly fade out until only her eyes are visible in the dark. Mochi will walk in front of whatever you're doing.
+```bash
+python3 cozy-cats/cozy-cats.py --height 32      # set pane height
+python3 cozy-cats/cozy-cats.py --no-sound        # disable terminal bell on reminders
+python3 cozy-cats/cozy-cats.py --no-restore      # don't reload saved cats
+python3 cozy-cats/cozy-cats.py --reset-state     # wipe saved cats and start fresh
+python3 cozy-cats/cozy-cats.py --smoke-test      # headless validation (no terminal needed)
+```
 
-**Name your cats**
-When you summon a cat, you can give them a custom name. The defaults are there if you want them.
+## How It Works
 
-**Hazel might leave**
-If you overwhelm her she'll slip away quietly. You can summon her again via the bell, but she'll need a moment.
+Two Python files, zero dependencies. `cozy-cats.py` handles rendering, input, cat AI, and the main loop. `sprite_data.py` contains pre-converted pixel art sprites (base64-encoded RGBA data decoded at runtime using only the standard library).
 
----
+The renderer uses ANSI escape codes and Unicode half-block characters to draw pixel art directly in your terminal, two pixels per terminal row. Mouse support uses the SGR mouse protocol built into modern terminals.
 
-## How it works
+## Troubleshooting
 
-One Python file, ~1200 lines, zero dependencies. It uses raw ANSI escape codes and Unicode half-block characters (▀) to render pixel art directly in your terminal, two pixels per terminal row. Mouse support is handled via the SGR mouse protocol built into most modern terminals. The cats are animated with a simple state machine (walking, sitting, loafing, sleeping) and wander around on random timers.
+**Terminal looks broken after a crash:**
+```bash
+printf '\033[?1000l\033[?1006l\033[?25h'; stty sane
+```
 
-Everything resets when you close it. No config files, no saved state, no background processes left running.
+**Colors look washed out:**
+Make sure your terminal supports true color. Check with:
+```bash
+echo $COLORTERM
+```
+It should say `truecolor` or `24bit`.
+
+**Cats are too small / scene doesn't fit:**
+Try a taller pane: `bash cozy-cats/launch.sh 36`
+
+**Can't click on cats in tmux:**
+Make sure tmux mouse mode is on. The launcher does this automatically, but you can also run:
+```bash
+tmux set-option -g mouse on
+```
 
 ---
 

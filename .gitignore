@@ -1,0 +1,11 @@
+# Local session notes — kept out of version control so handoffs stay private
+session-handoff.md
+**/session-handoff.md
+
+# Asset conversion script (needs Pillow, dev-only)
+convert_assets.py
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
