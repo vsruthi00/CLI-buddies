@@ -1,6 +1,6 @@
 # CLI Buddies
 
-Your terminal doesn't have to be lonely. CLI Buddies are pixel art companions that live in your terminal while you code -- wandering around, knocking things over, reminding you to hydrate, and generally being little gremlins about it. Cats first. More creatures coming.
+Your terminal doesn't have to be lonely. CLI Buddies are pixel art companions that live in your terminal while you code -- wandering around, knocking things over, reminding you to hydrate, eat, stretch, and sleep, and generally being little gremlins about it. Cats first. More creatures coming.
 
 Pure Python. One file per buddy. Zero dependencies. No pip installs.
 
@@ -33,7 +33,7 @@ Or click the green **Code** button on this page and choose **Download ZIP**, the
 python3 cozy-cats/cozy-cats.py --height 32
 ```
 
-A little room will appear with furniture, cats, and a bell. Click the bell to summon your first cat.
+A little room will appear with furniture, plants, and a bell. Click the bell to summon your first cat.
 
 **To quit:** press `Ctrl+C`
 
@@ -128,7 +128,7 @@ tmux split-window -v -l 32 'python3 /full/path/to/CLI-buddies/cozy-cats/cozy-cat
 
 Or just open a second terminal window and run:
 ```bash
-python3 cozy-cats/cozy-cats.py
+python3 cozy-cats/cozy-cats.py --height 32
 ```
 
 ### Closing
@@ -155,74 +155,162 @@ No pip installs. No virtual environments. No package managers. Just Python and a
 
 # Cozy Cats
 
-A colony of eight pixel art cats that wander around a cozy room while you work. They have distinct personalities, opinions about food, and a lot to say about your hydration habits.
+A colony of eight pixel art cats that wander around a cozy room while you work. They have distinct personalities, opinions about food, and a lot to say about your hydration habits, meal times, stretch breaks, and bedtime.
 
 ## The Cats
 
 You start with an empty room. Click the bell icon (top right) to summon a cat. Pick which one you want, give it a name (or keep the default), and watch it wander in. Up to four cats on screen at once.
 
-| Name | Personality | Food preference |
-|------|-------------|-----------------|
-| Seraphine | High-maintenance princess. Tolerates almost nothing. | Fish only |
-| Hazel | Sweet and shy. May flee if overwhelmed. | Wet food |
-| Kulfi | Chaos goblin. Knocks things over on purpose. | Anything |
-| Nyx | Void cat. Disappears into shadow, leaving only glowing eyes. | Wet food |
-| Arwen | Aloof and dry. Gives attention on her own terms. | Dry food |
-| Saffron | Gentle chirper. Trills at you unprompted. | Wet food |
-| Mochi | Extremely needy. Begs constantly. Sits on your keyboard. | Wet food |
-| Oreo | Chaos goblin #2. Always hungry, always begging, occasionally destructive. | Anything |
+| Name | Personality | Food preference | Special behavior |
+|------|-------------|-----------------|------------------|
+| Seraphine | High-maintenance princess. Tolerates almost nothing. | Fish only | Refuses dry and wet food |
+| Hazel | Sweet and shy. Easily overwhelmed. | Wet food | May flee if you pet her too much |
+| Kulfi | Chaos goblin. Loud. Affectionate. Destructive. | Anything | Knocks over plants when she walks past them |
+| Nyx | Void cat. Speaks from the shadows. | Wet food | Randomly disappears, leaving only her glowing eyes |
+| Arwen | Aloof and sassy. Dignified. | Dry food | Gives attention strictly on her own terms |
+| Saffron | Gentle chirper. Full-body happiness. | Wet food | Trills and chirps at random intervals |
+| Mochi | Extremely needy. Constantly worried about you. | Wet food | Sits on your keyboard when she gets the chance |
+| Oreo | Chaos goblin #2. Always hungry. Also destructive. | Anything | Begs AND knocks plants over |
+
+## The Room
+
+The scene includes:
+
+- **Cat tower** on the left (cats can sit on the top or middle perch)
+- **Cat bed** on the floor (cats curl up inside it to sleep)
+- **Desk and chair** where cats can loaf on the desk surface
+- **Shelf** hanging on the wall (cats can sit there too)
+- **Window** on the wall when the pane is wide enough
+- **Plants** (orchid and parlor palm) on the floor -- knockable by Kulfi and Oreo
+- **Lavender wall** gradient and warm brown wood floor
 
 ## Controls
 
-- **Click the bell** (top right) to summon a cat
-- **Click the save icon** (top right) to save your current cats so they reappear next time
-- **Click the trash icon** (top right) to send a cat away
-- **Click any cat** to open the interaction menu (feed, pet, play, cuddle)
-- **Click a knocked-over plant** to fix it (Kulfi and Oreo knock them over)
+All interaction is via mouse click. The top-right corner of the scene has three icons:
+
+| Icon | What it does |
+|------|--------------|
+| Bell | Opens the summon menu. Pick a cat to bring in (up to 4). |
+| Save | Saves your current colony so the same cats come back next launch. |
+| Trash | Opens the dismiss menu. Pick a cat to send away. |
+
+In the scene:
+
+- **Click any cat** to open the interaction menu (dry food, wet food, fish, yarn, feather toy, pet, cuddle)
+- **Click a knocked-over plant** to fix it
 - **Ctrl+C** to quit
 
-## Reminders
+Keyboard shortcuts in menus: arrow keys navigate, Enter selects, Esc closes.
 
-Your cats remind you to take care of yourself:
+## Wellness Reminders
 
-| Reminder | Frequency | When |
-|----------|-----------|------|
-| Drink water | Every 20 minutes | Always |
-| Stretch / take a break | Every 60 minutes | Always |
-| Eat a meal | At mealtimes | 7-8am, 12-1pm, 6-7pm |
+Your cats remind you to take care of yourself throughout the day. Each cat delivers reminders in their own voice -- Mochi will be genuinely worried, Seraphine will make it sound like your problem, Kulfi will just shout.
+
+| Reminder | Frequency | When it fires |
+|----------|-----------|---------------|
+| Drink water | Every 20 minutes | All day |
+| Stretch / take a break | Every 60 minutes | All day |
+| Eat a meal | Around meal times | 7-8am, 12-1pm, 6-7pm |
 | Have a snack | Afternoon | 3-5pm |
-| Motivational messages | Varies by cat | Throughout the day |
+| Motivational nudges | Varies by cat | Throughout the day |
+| **Go to sleep (gentle)** | Every 30 minutes | 10:30pm to midnight |
+| **Go to sleep (firm)** | Every 15 minutes | Midnight to 1am |
+| **Go to sleep (aggressive)** | Every 5 minutes | After 1am |
 
-Each cat delivers reminders in their own voice. Mochi will be genuinely worried about your hydration. Seraphine will make it sound like your problem. Kulfi will just shout.
+The sleep reminders escalate. At 10:30pm, Mochi politely suggests bedtime. By 2am, she is aggressively begging. Seraphine will threaten to sit on your face. Nyx will invoke the void.
 
 ## Features
 
-- **Pixel art room** with desk, chair, cat tower, cat bed, shelf, window, and plants
-- **Cat AI** -- cats wander, sit, loaf, sleep, claim furniture spots, and do cat things on their own
-- **Personality-driven interactions** -- each cat reacts differently to food, pets, and cuddles
-- **Kulfi and Oreo knock over plants** -- click to fix them
-- **Nyx disappears** into shadow and reappears when she feels like it
-- **Hazel may flee** if you pet her too much -- she'll come back if you summon her again
-- **Mochi sits on your keyboard** (a dedicated animation spot just for her)
-- **Heart popup** appears when you pet or cuddle a cat
-- **Colony saves** -- click save to preserve your cats between sessions
-- **Config file** at `~/.config/cozy-cats/config.json` for customizing reminder intervals, messages, and scene layout
+### Cat AI
+- Cats wander around, sit, loaf, sleep, and claim furniture rest spots on their own
+- State machine handles idle, walking, sleeping, loafing, and hidden (Nyx only)
+- Cats walk at a calm pace (about 4 pixels per second)
+- Each cat has a unique voice and 6-8 message categories per personality
+
+### Personality-driven interactions
+- Every cat reacts differently to food, pets, cuddles, and toys
+- Seraphine refuses anything but fish
+- Hazel may flee if overwhelmed and needs to be re-summoned
+- Kulfi and Oreo are destructive and loud
+- Nyx is haunting and sparse
+- Saffron chirps randomly
+
+### Physics-based plant knocking
+- Kulfi and Oreo only knock plants over when they actually walk near them
+- Click a knocked plant to fix it
+- Other cats will never knock plants over
+
+### Rest spot system
+- Six rest spots: cat bed, desk surface, tower top, tower middle, shelf, Mochi-only keyboard
+- Cats walk to their chosen spot and settle in
+- Cats sit inside the bed, not floating above it
+- Mochi has her own dedicated keyboard spot that only appears when she claims it
+
+### Heart popup
+- A heart appears above any cat you pet or cuddle for 2 seconds
+- Does not fire when Hazel flees
+
+### Colony persistence
+- Click the save icon to write your current colony to disk
+- Next launch automatically restores the same cats by default
+- Use `--no-restore` to skip the restore, or `--reset-state` to wipe saved cats
+
+### Dismiss cat
+- Click the trash icon to open a menu listing your active cats
+- Pick one to send away (useful if you want to change the lineup)
+
+### Nyx void mechanic
+- Nyx randomly fades into the shadows
+- While hidden, only her two glowing eyes are visible
+- She reappears on her own schedule
+
+### Mochi keyboard gag
+- Mochi occasionally climbs onto a little pixel keyboard that appears in the scene
+- The keyboard only renders while she is sitting on it
+- Other cats cannot claim this spot
+
+### Sound
+- Terminal bell rings on wellness reminders and cat summons
+- Disable with `--no-sound` or in the config file
+
+### Config file
+- Located at `~/.config/cozy-cats/config.json`
+- Override reminder intervals per cat
+- Append custom messages to any category (additive, won't replace the defaults)
+- Override scene layout positions (bell, tower, bed, plants, etc.)
+- Set custom FPS if you see flicker
+
+### State file
+- Located at `~/.config/cozy-cats/state.json`
+- Stores the current colony (cat keys + names)
+- Auto-updates on summon and dismiss
+
+### Auto-sizing
+- Scene adapts to your pane size on launch
+- Use `--height N` to override
+- Below 24 rows, sprites automatically downscale to stay readable
 
 ## CLI Flags
 
 ```bash
 python3 cozy-cats/cozy-cats.py --height 32      # set pane height
-python3 cozy-cats/cozy-cats.py --no-sound        # disable terminal bell on reminders
-python3 cozy-cats/cozy-cats.py --no-restore      # don't reload saved cats
-python3 cozy-cats/cozy-cats.py --reset-state     # wipe saved cats and start fresh
-python3 cozy-cats/cozy-cats.py --smoke-test      # headless validation (no terminal needed)
+python3 cozy-cats/cozy-cats.py --no-sound       # disable terminal bell on reminders
+python3 cozy-cats/cozy-cats.py --no-restore     # don't reload saved cats
+python3 cozy-cats/cozy-cats.py --reset-state    # wipe saved cats and start fresh
+python3 cozy-cats/cozy-cats.py --no-kitty       # force half-block rendering in Kitty terminal
+python3 cozy-cats/cozy-cats.py --smoke-test     # headless validation (no terminal needed)
 ```
 
 ## How It Works
 
-Two Python files, zero dependencies. `cozy-cats.py` handles rendering, input, cat AI, and the main loop. `sprite_data.py` contains pre-converted pixel art sprites (base64-encoded RGBA data decoded at runtime using only the standard library).
+Two Python files, zero runtime dependencies:
+
+- **`cozy-cats.py`** handles rendering, input, cat AI, menus, state machine, reminders, and the main loop.
+- **`sprite_data.py`** contains pre-converted pixel art sprites as base64-encoded RGBA data. Decoded at runtime using only the standard library.
 
 The renderer uses ANSI escape codes and Unicode half-block characters to draw pixel art directly in your terminal, two pixels per terminal row. Mouse support uses the SGR mouse protocol built into modern terminals.
+
+If you run inside Kitty terminal (outside of tmux), cozy-cats will automatically use the Kitty graphics protocol for a sharper image. Inside tmux or any other terminal, it falls back to half-block rendering which works everywhere.
 
 ## Troubleshooting
 
@@ -246,6 +334,12 @@ Make sure tmux mouse mode is on. The launcher does this automatically, but you c
 ```bash
 tmux set-option -g mouse on
 ```
+
+**tmux command not found:**
+Install tmux first -- see the Install tmux section above.
+
+**Nothing happens when I click the bell:**
+Make sure you clicked the cozy-cats pane first (to give it focus) and that your terminal has mouse support enabled.
 
 ---
 
