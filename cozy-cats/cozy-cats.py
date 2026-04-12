@@ -246,7 +246,7 @@ def read_events():
 # ══════════════════════════════════════════════════════════════════════════════
 
 SCENE_BG = (138, 122, 158)  # lavender room colour
-FLOOR_H  = 6              # base floor height in pixels (scaled in Kitty mode)
+FLOOR_H  = 8              # base floor height in pixels (scaled in Kitty mode)
 
 def is_kitty():
     """Detect Kitty terminal with graphics protocol support.
@@ -258,17 +258,19 @@ def is_kitty():
 
 class Canvas:
     """
-    Pixel framebuffer with two rendering modes:
+    Pixel framebuffer with three rendering modes:
 
     scale=1 (half-block): pw = term_w, ph = term_h * 2
         Each terminal cell shows 2 vertical pixels via the ▀ character.
-        Resolution at 22 rows x 120 cols = 120 x 44 pixels.
+        Resolution at 32 rows x 120 cols = 120 x 64 pixels.
 
-    scale=2 (Kitty graphics): pw = term_w * 2, ph = term_h * 4
-        Each terminal cell maps to a 2x4 pixel region. The Kitty
-        graphics protocol renders the framebuffer as a native image,
-        giving 4x the pixel count without character approximation.
-        Resolution at 22 rows x 120 cols = 240 x 88 pixels.
+    scale=2 (quarter-block): pw = term_w * 2, ph = term_h * 2 * 2
+        Each terminal cell shows a 2x2 pixel block via Unicode quarter-
+        block characters. Doubles horizontal resolution. 2 colors per cell.
+        Resolution at 32 rows x 120 cols = 240 x 128 pixels.
+
+    scale=2 + Kitty: pw = term_w * 2, ph = term_h * 4
+        Kitty graphics protocol for native image rendering.
     """
     def __init__(self, term_h, term_w, scale=1):
         self.th, self.tw = term_h, term_w
@@ -316,6 +318,95 @@ class Canvas:
                 else:
                     parts.append(bg(*b) + fg(*t) + '▀')
             parts.append(RST)
+        return ''.join(parts)
+
+    def render_quarter(self, start_row=1):
+        """Render using 2x2 quarter-block characters.
+
+        Each terminal cell maps to 4 canvas pixels (2 wide x 2 tall).
+        Uses Unicode quarter-block characters with fg/bg colors to show
+        2-color patterns per cell. Doubles the effective resolution
+        compared to half-blocks.
+        """
+        SBG = SCENE_BG
+        rows = self._b
+        ph, pw = self.ph, self.pw
+        # Pad to even dimensions
+        if ph % 2:
+            rows = rows + [[None]*pw]
+            ph += 1
+        if pw % 2:
+            rows = [r + [None] for r in rows]
+            pw += 1
+
+        # Quarter block lookup: bits = TL TR BL BR -> character
+        # 0000=space, 0001=▗, 0010=▖, 0011=▄, 0100=▝, 0101=▐,
+        # 0110=▞, 0111=▟, 1000=▘, 1001=▚, 1010=▌, 1011=▙,
+        # 1100=▀, 1101=▜, 1110=▛, 1111=█
+        QC = ' ▗▖▄▝▐▞▟▘▚▌▙▀▜▛█'
+
+        parts = [HIDE]
+        for y in range(0, ph, 2):
+            tr = start_row + y // 2
+            parts.append(f'\033[{tr};1H')
+            top_r, bot_r = rows[y], rows[y+1]
+            prev_fg = prev_bg = None
+            for x in range(0, pw, 2):
+                tl = top_r[x] or SBG
+                tr_c = top_r[x+1] or SBG
+                bl = bot_r[x] or SBG
+                br = bot_r[x+1] or SBG
+
+                # Find the two most common colors in this 2x2 block
+                colors = [tl, tr_c, bl, br]
+                unique = []
+                for c in colors:
+                    if c not in unique:
+                        unique.append(c)
+
+                if len(unique) == 1:
+                    # All same color -> solid background
+                    c = unique[0]
+                    if c != prev_bg or prev_fg is not None:
+                        parts.append(bg(*c))
+                        prev_bg = c
+                        prev_fg = None
+                    parts.append(' ')
+                else:
+                    # Pick the two most frequent colors as fg and bg
+                    c1 = unique[0]
+                    c2 = unique[1]
+                    # Count which is more common (ties go to c1=bg)
+                    n1 = sum(1 for c in colors if c == c1)
+                    if n1 >= 2:
+                        bg_c, fg_c = c1, c2
+                    else:
+                        bg_c, fg_c = c2, c1
+                    # Build the bitmask: 1 where pixel matches fg_c
+                    mask = 0
+                    if tl == fg_c:  mask |= 8
+                    if tr_c == fg_c: mask |= 4
+                    if bl == fg_c:  mask |= 2
+                    if br == fg_c:  mask |= 1
+                    # For 3+ unique colors, map extras to nearest of fg/bg
+                    if len(unique) > 2:
+                        for i, c in enumerate([tl, tr_c, bl, br]):
+                            if c != bg_c and c != fg_c:
+                                # Map to fg (it's a detail pixel)
+                                bit = [8, 4, 2, 1][i]
+                                mask |= bit
+
+                    ch = QC[mask]
+                    if fg_c != prev_fg:
+                        parts.append(fg(*fg_c))
+                        prev_fg = fg_c
+                    if bg_c != prev_bg:
+                        parts.append(bg(*bg_c))
+                        prev_bg = bg_c
+                    parts.append(ch)
+
+            parts.append(RST)
+            prev_fg = prev_bg = None
         return ''.join(parts)
 
     def render_kitty(self, start_row=1):
@@ -427,6 +518,9 @@ DEFS = {
             'dry':        ["Remove this immediately.","I don't do that."],
             'food_remind':["It's mealtime. For both of us.","You should eat something. Properly.","Have you eaten? I have standards for you."],
             'snack_remind':["A small snack. Something elegant.","Afternoon nibble. You deserve it.","Even I take tea. Eat something."],
+            'sleep':       ["It's getting late. Even I need my beauty sleep.","Bed. Soon.","You should rest. You look tired. More than usual."],
+            'sleep_late':  ["It is past midnight. This is unacceptable.","Go to bed. Now. I'm not asking.","Sleep. Immediately."],
+            'sleep_urgent':["WHY ARE YOU STILL AWAKE.","GO. TO. BED. I am BEGGING you.","This is absurd. Sleep NOW or I will sit on your face."],
         }
     },
     'hazel': {
@@ -449,6 +543,9 @@ DEFS = {
             'wet':        ["oh! this is wonderful ","*purrs while eating*"],
             'food_remind':["um... have you eaten? please eat...","maybe a little lunch? or dinner?"],
             'snack_remind':["a snack maybe? only if you want...","something small? i worry..."],
+            'sleep':       ["oh... it's getting late... maybe sleep?","you should rest... if you want..."],
+            'sleep_late':  ["it's really late... please sleep...","i'm worried... please go to bed..."],
+            'sleep_urgent':["please please please go to sleep...","i can't sleep if you don't sleep... please..."],
         }
     },
     'kulfi': {
@@ -471,6 +568,9 @@ DEFS = {
             'wet':        ["AMAZING. MORE PLEASE.","*eats before bowl hits the floor*"],
             'food_remind':["EAT SOMETHING. I AM ALSO HUNGRY.","FOOD TIME!!!! FOR YOU AND ME!!!!"],
             'snack_remind':["SNACK O'CLOCK!!!","it's snack time and that's MANDATORY"],
+            'sleep':       ["hey maybe sleep soon?? i'll keep you company!!","BEDTIME APPROACHING!!!"],
+            'sleep_late':  ["IT IS SO LATE GO TO BED","SLEEP. NOW. I WILL KNOCK THINGS OVER UNTIL YOU DO."],
+            'sleep_urgent':["WHY!!! ARE!!! YOU!!! AWAKE!!!","GO TO BED OR I SWEAR I WILL DESTROY EVERYTHING","IT IS [checks clock] WAY TOO LATE. BED. NOW!!!!"],
         }
     },
     'nyx': {
@@ -493,6 +593,9 @@ DEFS = {
             'wet':     ["...acceptable.","*eats methodically*"],
             'food_remind':["...eat.","the void demands you nourish yourself."],
             'snack_remind':["...a snack. from the shadows.","sustenance. now."],
+            'sleep':       ["...the darkness calls you to rest.","...sleep soon."],
+            'sleep_late':  ["...it is late. even shadows rest.","...go to bed. the void commands it."],
+            'sleep_urgent':["THE VOID DOES NOT APPROVE OF THIS HOUR.","SLEEP. the darkness is ANGRY now.","...you cannot outrun the need for sleep."],
         }
     },
     'arwen': {
@@ -513,6 +616,9 @@ DEFS = {
             'wet':     ["It's fine.","Not my preference."],
             'food_remind':["Eat something. Don't make me ask twice.","Time to eat. Go."],
             'snack_remind':["Have a snack. You've earned it. Probably.","Afternoon snack. Go on."],
+            'sleep':       ["Bed. Whenever you're ready. Which should be now.","You look tired. Go sleep."],
+            'sleep_late':  ["It's late. Go to bed. I'm not going to say it again.","Sleep. Now."],
+            'sleep_urgent':["Are you SERIOUS right now. GO TO BED.","I will stare at you until you sleep. GO."],
         }
     },
     'saffron': {
@@ -534,6 +640,9 @@ DEFS = {
             'wet':     ["*happy chirps*","mrrp~ my favourite! "],
             'food_remind':["chirp! mealtime! go eat~","*trills* food time for you!"],
             'snack_remind':["trill~ snack break!","*chirps* afternoon snack time~"],
+            'sleep':       ["*soft chirp* sleepy time soon~","trill~ maybe bedtime?"],
+            'sleep_late':  ["*worried chirp* it's so late! please sleep!","chirp! chirp! BED! now!"],
+            'sleep_urgent':["*LOUD AGITATED CHIRPING* SLEEP!!!","TRILL TRILL TRILL GO TO BED RIGHT NOW!!!"],
         }
     },
     'mochi': {
@@ -555,6 +664,9 @@ DEFS = {
             'wet':     ["MY FAVOURITE!! YOU REMEMBERED!!","*purrs so loud it echoes*"],
             'food_remind':["EAT SOMETHING BESTIE PLEASE","have you eaten?? i'm worried!!"],
             'snack_remind':["SNACK TIME!! treat yourself!!","afternoon snack!! you deserve it!!"],
+            'sleep':       ["maybe bedtime soon?? i'll cuddle you!!","sleepy time? i'll come too!!"],
+            'sleep_late':  ["BESTIE IT IS SO LATE PLEASE SLEEP","GO TO BED I AM LITERALLY BEGGING YOU"],
+            'sleep_urgent':["I WILL NOT STOP MEOWING UNTIL YOU SLEEP","SLEEP SLEEP SLEEP SLEEP SLEEP PLEASE","IT IS [checks time] WAY TOO LATE I'M CRYING"],
         }
     },
     'oreo': {
@@ -579,6 +691,9 @@ DEFS = {
             'knock':   ["*CRASH*","oops. (not sorry)","*looks at you while pushing it*"],
             'food_remind':["FOOD. for you. and also me.","eat something. then feed me."],
             'snack_remind':["snack time. for you. AND me.","afternoon snack. i'll have some too."],
+            'sleep':       ["bed soon? i'm sleepy. feed me first tho.","sleep time approaching. snack first."],
+            'sleep_late':  ["go to bed. i'll guard the food. go.","it's late. sleep. i promise i won't eat your stuff."],
+            'sleep_urgent':["BED. NOW. EVEN I AM TIRED. (still hungry tho)","SLEEP OR I EAT EVERYTHING IN THE KITCHEN","GO TO BED IT IS UNREASONABLE O'CLOCK"],
         }
     },
 }
@@ -756,7 +871,7 @@ class Cat:
         self.d        = DEFS[key]
         self.sprites  = sprite_data.get_cat_sprites(key)
         self.px       = px
-        self.py       = floor_py - sprite_h() + 4  # +4 compensates for transparent padding
+        self.py       = floor_py - sprite_h() + 4  # 16x16 cats have ~4px bottom transparent padding  # +4 compensates for transparent padding
         self.floor_py = floor_py
         self.cv_pw    = cv_pw
         self.dx       = random.choice([-1,1])
@@ -769,6 +884,7 @@ class Cat:
         self._break_t = time.time() + self.d['break_min']*60
         self._motiv_t = time.time() + self.d['motiv_min']*60
         self._food_t  = time.time() + random.uniform(5, 15)*60  # first food check soon
+        self._sleep_t = time.time() + random.uniform(1, 5)*60   # first sleep check soon
         # bubble
         self.bubble   = f"Hi! I'm {name}! "
         self._bub_t   = time.time() + 5.0
@@ -803,7 +919,7 @@ class Cat:
         if self._scene and self.claimed_spot is not None:
             self._scene.release_spot(self)
             self.claimed_spot = None
-            self.py = self.floor_py - sprite_h() + 4
+            self.py = self.floor_py - sprite_h() + 4  # 16x16 cats have ~4px bottom transparent padding
         self.target_px = None
         self.target_py = None
         self.target_pose = None
@@ -867,7 +983,27 @@ class Cat:
                 elif 15 <= hr <= 17:
                     m = self._msg('snack_remind')
                     if m: self.say(m, 7); beep()
-                self._food_t = now + 45*60  # check again in 45 min
+                self._food_t = now + 45*60
+            # Sleep reminders — escalating urgency from 10:30pm onward
+            elif now >= self._sleep_t:
+                hr = datetime.now().hour
+                mn = datetime.now().minute
+                t = hr + mn / 60.0
+                if t >= 22.5 or t < 5:
+                    if t >= 1 or t < 5:
+                        m = self._msg('sleep_urgent')
+                        if m: self.say(m, 10); beep()
+                        self._sleep_t = now + 5*60
+                    elif t >= 0:  # midnight to 1am
+                        m = self._msg('sleep_late')
+                        if m: self.say(m, 9); beep()
+                        self._sleep_t = now + 15*60
+                    else:  # 10:30pm to midnight
+                        m = self._msg('sleep')
+                        if m: self.say(m, 8); beep()
+                        self._sleep_t = now + 30*60
+                else:
+                    self._sleep_t = now + 30*60
         # special — Nyx hide/appear
         if self.key == 'nyx':
             if not self.hidden and random.random() < self.d.get('hide_chance',0):
@@ -877,15 +1013,23 @@ class Cat:
             if self.hidden and now >= self._hide_t:
                 self.hidden = False
                 self.say(self._msg('appear'), 5)
-        # special — Kulfi/Oreo knock plants
-        for attr in ('knock_chance',):
-            kc = self.d.get(attr, 0)
-            if kc and random.random() < kc and self._scene:
-                which = random.choice(['orchid','fern'])
-                self._scene.knock(which)
-                m = self._msg('knock')
-                if m and not self.bubble:
-                    self.say(m, 5)
+        # special — Kulfi/Oreo knock plants (only when walking near them)
+        kc = self.d.get('knock_chance', 0)
+        if kc and self.state == Cat.WALK and self._scene:
+            s = self._scene
+            near_dist = sprite_w() + 4
+            # Check if cat is near plant 1
+            if not s.orchid_k and abs(self.px - s.plant1_px) < near_dist:
+                if random.random() < kc:
+                    s.knock('orchid')
+                    m = self._msg('knock')
+                    if m and not self.bubble: self.say(m, 5)
+            # Check if cat is near plant 2
+            if not s.fern_k and abs(self.px - s.plant2_px) < near_dist:
+                if random.random() < kc:
+                    s.knock('fern')
+                    m = self._msg('knock')
+                    if m and not self.bubble: self.say(m, 5)
         # special — Mochi/Oreo beg
         bc = self.d.get('beg_chance', 0)
         if bc and random.random() < bc and not self.bubble:
@@ -901,8 +1045,8 @@ class Cat:
         if now >= self._state_t:
             self._pick_state()
             self._state_t = now + random.uniform(3, 14)
-        # movement
-        if self.state == Cat.WALK:
+        # movement — move every 3rd frame (~4 px/sec instead of 12)
+        if self.state == Cat.WALK and self.frame % 3 == 0:
             self.px += self.dx
             if self.target_px is not None:
                 # Walking toward a rest spot: snap to pose when we arrive
@@ -1073,14 +1217,14 @@ class Scene:
                 setattr(self, field, val)
 
         # ── Rest spots ──────────────────────────────────────────────────────
-        # Cat sprites have 4px bottom + 3px top transparent padding (visible body ~9px).
-        # py values place the sprite so the cat sits *inside* furniture, not on top.
+        # Cat sprites are 16x16 with ~4px bottom padding, ~3px top padding.
+        # Visible feet at about row 11-12. Body starts around row 3.
         self.rest_spots = [
             # Cat bed — cats sleep curled inside the bed
-            {'px': self.bed_px + 4,   'py': self.bed_py - sh + bed_h - 2,
+            {'px': self.bed_px + 4,   'py': self.bed_py - sh + bed_h + 2,
              'pose': Cat.SLEEP, 'kind': 'bed',    'allowed': None},
-            # Desk surface — cats loaf on desk (feet on desk top surface)
-            {'px': self.desk_px + desk_w//2 - 4,  'py': self.desk_py - sh + 12,
+            # Desk surface — cats loaf on desk (feet on desk top row 4)
+            {'px': self.desk_px + desk_w//2 - 4,  'py': self.desk_py - sh + 10,
              'pose': Cat.LOAF,  'kind': 'desk',   'allowed': None},
             # Tower top platform — sit regally
             {'px': self.tower_px + 1, 'py': self.tower_py - sh + 10,
@@ -1451,6 +1595,18 @@ def run_smoke_test():
     SPRITE_H = _SPRITE_H_FULL
     _ds_cache.clear()
 
+    # --- Quarter-block mode (scale=2, higher resolution)
+    cv_qb = Canvas(32, 120, scale=2)
+    scene_qb = Scene(cv_qb)
+    check(cv_qb.pw == 240, f"quarter: canvas width 240 (got {cv_qb.pw})")
+    check(cv_qb.ph == 128, f"quarter: canvas height 128 (got {cv_qb.ph})")
+    cv_qb.fill()
+    scene_qb.draw()
+    out_qb = cv_qb.render_quarter(start_row=1)
+    check(len(out_qb) > 500, f"quarter: render produced {len(out_qb)} bytes")
+    check(scene_qb.tower_py >= 2, "quarter: tower fits")
+    check(scene_qb.desk_py >= 0,  "quarter: desk fits")
+
     # --- Kitty mode (scale=2, full-resolution sprites, higher pixel grid)
     cv4 = Canvas(22, 120, scale=2)
     scene4 = Scene(cv4)
@@ -1513,15 +1669,22 @@ def run():
         return
 
     th, tw = term_size()
-    ph = args.height if args.height > 0 else th
 
-    # Rendering mode: Kitty graphics (scale=2) or half-block fallback (scale=1)
-    # Kitty mode doubles the pixel grid in both directions, giving 4x the
-    # pixels in the same terminal space. Sprites render at full resolution.
+    # Auto-size: if no --height given, use the full terminal.
+    # If running in a tmux pane, th is already the pane height.
+    # Clamp to a sensible range so it works on any screen.
+    if args.height > 0:
+        ph = args.height
+    else:
+        ph = th
+    ph = max(16, min(ph, 60))  # at least 16 rows, cap at 60
+
+    # Rendering mode:
+    # - Kitty graphics (scale=2) when in Kitty terminal outside tmux
+    # - Half-block (scale=1) otherwise — reliable on all terminals
     use_kitty = is_kitty() and not args.no_kitty
     scale = 2 if use_kitty else 1
 
-    # Only use compact/downscaled mode for half-block on small panes
     global COMPACT, SPRITE_W, SPRITE_H
     if scale == 1 and ph <= 24:
         COMPACT = True
@@ -1582,6 +1745,10 @@ def run():
 
     signal.signal(signal.SIGINT,  cleanup)
     signal.signal(signal.SIGTERM, cleanup)
+
+    # Ignore SIGWINCH — resize is handled by restarting.
+    # Live resize in raw mode is fragile and causes crashes.
+    signal.signal(signal.SIGWINCH, signal.SIG_IGN)
 
     try:
         tty.setraw(sys.stdin.fileno())
